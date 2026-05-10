@@ -1,6 +1,6 @@
 #!/bin/sh
 # Bash script to build a small python_embed for Windows.
-URL=https://www.python.org/ftp/python/3.14.4/python-3.14.4-embed-amd64.zip
+URL=https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip
 RESULT=python_embeded
 DL=dl
 [ -d $RESULT ] && echo "$RESULT already exists" && exit 1
