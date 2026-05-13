@@ -74,10 +74,15 @@ def _process(gen_data):
                 (-1, f"Loading base model: {gen_data['base_model_name']}", None),
             ]
         )
-    gen_data["modelhash"] = pipeline.load_base_model(
+
+    if "base_model_hash" not in gen_data:
+        gen_data["base_model_hash"] = get_checkpoint_hashes(gen_data["base_model_name"])['SHA256']
+
+    pipeline.load_base_model(
         gen_data["base_model_name"],
         hash=gen_data.get("base_model_hash", None),
     )
+
     if "silent" not in gen_data:
         outputs.append([gen_data["task_id"], "preview", (-1, f"Loading LoRA models ...", None)])
 
@@ -278,7 +283,7 @@ def _process(gen_data):
                 "sampler_name": gen_data["sampler_name"],
                 "scheduler": gen_data["scheduler"],
                 "base_model_name": gen_data["base_model_name"],
-                "base_model_hash": get_checkpoint_hashes(gen_data["base_model_name"])['SHA256'],
+                "base_model_hash": gen_data["base_model_hash"],
                 "loras": [[f"{get_lora_hashes(lora['name'])['SHA256']}", f"{lora['weight']} - {lora['name']}"] for lora in used_loras],
                 "start_step": start_step,
                 "denoise": denoise,
@@ -468,14 +473,17 @@ def task_result(task_id):
 
     while True:
         if not outputs:
-            time.sleep(0.1)
+            # Throttle check/updates
+            time.sleep(settings.default_settings.get("update_interval", 0.1))
             continue
 
         matches = [res for res in outputs if res[0] == task_id] 
 
         if matches:
-            id, flag, product = matches.pop(0)
-            outputs.remove([id, flag, product])
+            flag = "preview"
+            while len(matches) and flag == "preview": # If we have a bunch of replies, skip the previews
+                id, flag, product = matches.pop(0)
+                outputs.remove([id, flag, product])
             break
 
     return (flag, product)

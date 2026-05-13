@@ -1,3 +1,6 @@
+### 26.05.12
+* [HiDreamO1](https://huggingface.co/Comfy-Org/HiDream-O1-Image) support
+
 ### 26.04.29
 * [LTXV 2.3](https://huggingface.co/Lightricks/LTX-2.3) support
 * Code cleanup

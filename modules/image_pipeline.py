@@ -60,6 +60,7 @@ from comfy.sampler_helpers import (
 from comfy_extras.nodes_sd3 import EmptySD3LatentImage
 from comfy_extras.nodes_flux import FluxKontextImageScale, EmptyFlux2LatentImage
 from comfy_extras.nodes_hunyuan import EmptyHunyuanImageLatent, EmptyHunyuanLatentVideo
+from comfy_extras.nodes_hidream_o1 import EmptyHiDreamO1LatentImage, HiDreamO1PatchSeamSmoothing
 from comfy_extras.nodes_edit_model import ReferenceLatent
 from comfy_extras.nodes_qwen import TextEncodeQwenImageEdit
 from node_helpers import conditioning_set_values
@@ -144,8 +145,6 @@ class pipeline:
         }
         return settings.default_settings.get(shortname, defaults[shortname] if shortname in defaults else None)
 
-#        known_models = ["Anima", "AuraFlow", "BaseModel", "CosmosPredict2", "ErnieImage", "Flux", "Flux2", "Flux2Klein4B", "Flux2Klein9B", "HiDream", "Lumina2", "NewBieImage", "PixArt", "QwenImage", "SD3", "SDXL", "ZImage"]
-
     # Add new model setups here.
     # Simple workflows with "Load models"->"Sample"->"VAE" might work right away.
     # Add new clip/vae models to settings and pathdb-files.
@@ -219,6 +218,17 @@ class pipeline:
             "vae_name": get_vae_name("vae_flux"),
             "model_sampling": ('SD3', settings.default_settings.get("hidream_shift", 3.0))
         },
+        "HiDreamO1": {
+            "latent": "HiDreamO1",
+            "clip_type": comfy.sd.CLIPType.HIDREAM, #FIXME
+            "clip_names": [ #FIXME
+                get_clip_name("clip_g"),
+                get_clip_name("clip_l"),
+                get_clip_name("clip_llama"),
+                get_clip_name("clip_t5")
+            ],
+            "vae_name": get_vae_name("vae_flux"), #FIXME
+        },
         "Lumina2": {
             "latent": "SD3",
             "clip_type": comfy.sd.CLIPType.LUMINA2,
@@ -279,14 +289,13 @@ class pipeline:
     known_models = known_model_info.keys() # FIXME
 
     xl_base: StableDiffusionModel = None
-    xl_base_hash = ""
+    xl_base_hash = None
 
     xl_base_patched: StableDiffusionModel = None
-    xl_base_patched_hash = ""
-    xl_base_patched_extra = set()
+    xl_base_patched_hash = None
 
     xl_controlnet: StableDiffusionModel = None
-    xl_controlnet_hash = ""
+    xl_controlnet_hash = None
 
     model_info = None
     models = []
@@ -319,7 +328,7 @@ class pipeline:
         return self.known_model_info.get(unet_type, None)
 
     def load_base_model(self, name, unet_only=False, input_unet=None, hash=None):
-        if self.xl_base_hash == name and self.xl_base_patched_extra == set():
+        if self.xl_base_hash is not None and (self.xl_base_hash == name or self.xl_base_hash == hash):
             return
 
         default_name = path_manager.get_folder_file_path(
@@ -346,10 +355,9 @@ class pipeline:
             print(f"Loading base {'unet' if unet_only else 'model'}: {name}")
 
         self.xl_base = None
-        self.xl_base_hash = ""
+        self.xl_base_hash = None
         self.xl_base_patched = None
-        self.xl_base_patched_hash = ""
-        self.xl_base_patched_extra = set()
+        self.xl_base_patched_hash = None
         self.conditions = None
         self.model_info = None
         gc.collect(generation=2)
@@ -478,7 +486,8 @@ class pipeline:
                     # We got something, assume it was a unet
                     # Re-run load_base_model to get text-encoders and vae
                     self.load_base_model(
-                        filename,
+                        name,
+                        hash=hash,
                         unet_only=True,
                         input_unet=sd,
                     )
@@ -490,23 +499,23 @@ class pipeline:
         if unet == None:
             print(f"Failed to load {name}")
             self.xl_base = None
-            self.xl_base_hash = ""
+            self.xl_base_hash = None
             self.xl_base_patched = None
-            self.xl_base_patched_hash = ""
+            self.xl_base_patched_hash = None
         else:
             self.xl_base = self.StableDiffusionModel(
                 unet=unet, clip=clip, vae=vae, clip_vision=clip_vision
             )
             if not (self.xl_base.unet.model.__class__.__name__ in self.known_models):
                 print(
-                    f"Model {self.xl_base.unet.model.__class__.__name__} not supported. RuinedFooocus supports {self.known_models} models as the base model."
+                    f"Model {self.xl_base.unet.model.__class__.__name__} not supported. RuinedFooocus supports {list(self.known_models)} models as the base model."
                 )
                 self.xl_base = None
 
             if self.xl_base is not None:
-                self.xl_base_hash = name
+                self.xl_base_hash = hash if hash is not None else name
                 self.xl_base_patched = self.xl_base
-                self.xl_base_patched_hash = ""
+                self.xl_base_patched_hash = None
                 self.model_info = self.get_clip_and_vae(self.xl_base_patched.unet)
         return
 
@@ -597,7 +606,7 @@ class pipeline:
     ):
         try:
             if self.xl_base_patched == None or self.xl_base_patched.unet.model.__class__.__name__ not in self.known_models:
-                print(f"ERROR: Can only use {self.known_models} models")
+                print(f"ERROR: Can only use {list(self.known_models)} models")
                 worker.interrupt_ruined_processing = True
                 if callback is not None:
                     worker.add_result(
@@ -786,12 +795,16 @@ class pipeline:
                     latent = EmptyFlux2LatentImage().execute(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1
                     )[0]
-                case 'SD3':
-                    latent = EmptySD3LatentImage().generate(
+                case 'HiDreamO1':
+                    latent = EmptyHiDreamO1LatentImage().execute(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1
                     )[0]
                 case 'HunyuanImage':
                     latent = EmptyHunyuanImageLatent().generate(
+                        width=gen_data["width"], height=gen_data["height"], batch_size=1
+                    )[0]
+                case 'SD3':
+                    latent = EmptySD3LatentImage().generate(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1
                     )[0]
                 case _:
