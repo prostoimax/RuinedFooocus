@@ -88,8 +88,8 @@ def _process(gen_data):
 
     # FIXME move this into get_perf_options?
     if (
-        gen_data["performance_selection"]
-        == shared.performance_settings.CUSTOM_PERFORMANCE
+        gen_data["performance_selection"] == shared.performance_settings.CUSTOM_PERFORMANCE or
+        gen_data["performance_selection"] == None
     ):
         steps = gen_data["custom_steps"]
     else:
@@ -179,7 +179,7 @@ def _process(gen_data):
         pheight = int(height * grid_ysize / grid_max)
         if shared.state["preview_grid"] is None:
             shared.state["preview_grid"] = Image.new("RGB", (pwidth, pheight))
-        if y is not None:
+        if y is not None and step != 0: # FIXME: Weird bug where the 0th step has the preview from the last image, so just skip it
             if isinstance(y, Image.Image):
                 image = y
             elif isinstance(y, str):
@@ -195,15 +195,16 @@ def _process(gen_data):
             )
             image = image.resize((int(width / grid_max), int(height / grid_max)))
             shared.state["preview_grid"].paste(image, (grid_xpos, grid_ypos))
+
+            shared.state["preview_grid"].save(
+                shared.path_manager.model_paths["temp_preview_path"],
+                optimize=True,
+                quality=35 if step < total_steps else 70,
+            )
+
             preview = shared.path_manager.model_paths["temp_preview_path"]
         else:
             preview = None
-
-        shared.state["preview_grid"].save(
-            shared.path_manager.model_paths["temp_preview_path"],
-            optimize=True,
-            quality=35 if step < total_steps else 70,
-        )
 
         if gen_data.get("task_type", None) != "tool_call":
             outputs.append(

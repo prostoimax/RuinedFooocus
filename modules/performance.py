@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 import shutil
 
-
 class PerformanceSettings:
     DEFAULT_PERFORMANCE_FILE = Path("settings/performance.default")
     PERFORMANCE_FILE = Path("settings/performance.json")
@@ -49,4 +48,5 @@ class PerformanceSettings:
         self.performance_options = self.load_performance()
 
     def get_perf_options(self, name):
-        return self.performance_options[name]
+        from shared import settings
+        return self.performance_options.get(name, settings.default_settings.get("performance", "Speed"))

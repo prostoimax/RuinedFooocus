@@ -17,7 +17,7 @@ def add_evolve_tab(prompt, image_number, run_event):
                 ]  # Skip <|startoftext> & <|endoftext|>
             else:
                 res += [token]
-        return tokenizer.convert_tokens_to_string(res).strip()
+        return tokenizer.convert_tokens_to_string(res).strip().replace('</w>', ' ')
 
     def randomize_words(prompt, strength):
         with open("wildcards_official/words.txt", "r", encoding="utf-8") as f:

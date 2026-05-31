@@ -46,10 +46,10 @@ comfy.cli_args.args.bf16_text_enc = args.bf16_text_enc
 
 if torch_platform == "cpu":
     comfy.cli_args.args.cpu = True
-if args.directml is not None:
-    comfy.cli_args.args.directml = args.directml
-elif torch_platform == "directml":
-    comfy.cli_args.args.directml = -1
+#if args.directml is not None:
+#    comfy.cli_args.args.directml = args.directml
+#elif torch_platform == "directml":
+#    comfy.cli_args.args.directml = -1
 
 from pathlib import Path
 import shared
@@ -483,11 +483,14 @@ with shared.gradio_root as block:
                 )
                 add_ctrl("preset_selection", preset_selection)
 
+                performance_add = gr.Button(value="+", size="sm")
+                performance_delete = gr.Button(value="-", size="sm")
                 performance_selection = gr.Dropdown(
                     label=t("Performance"),
                     choices=list(performance_settings.performance_options.keys())
                     + [performance_settings.CUSTOM_PERFORMANCE],
                     value=settings["performance"],
+                    buttons=[performance_add, performance_delete],
                 )
                 add_ctrl("performance_selection", performance_selection, True)
                 perf_name = gr.Textbox(
@@ -497,7 +500,7 @@ with shared.gradio_root as block:
                     visible='hidden',
                 )
                 perf_save = gr.Button(
-                    value=t("Save"),
+                    value=t("Save (or Cancel)"),
                     visible='hidden',
                 )
                 custom_default_values = performance_settings.get_perf_options(
@@ -560,10 +563,11 @@ with shared.gradio_root as block:
 
                 @perf_save.click(
                     api_visibility='undocumented',
-                    inputs=performance_outputs,
+                    inputs=[performance_selection] + performance_outputs,
                     outputs=[performance_selection],
                 )
                 def performance_save(
+                    perf_selection,
                     perf_name,
                     perf_save,
                     cfg,
@@ -588,7 +592,10 @@ with shared.gradio_root as block:
                         ]
                         return gr.update(choices=choices, value=perf_name)
                     else:
-                        return gr.update()
+                        selection = settings.get("performance") # Stupid workaround, we need the Dropdown to chang
+                        if perf_selection == selection: # ...so we pick the option that isn't currently selected
+                            selection = None
+                        return gr.update(value=selection)
 
                 with gr.Group():
                     aspect_ratios_selection = gr.Dropdown(
@@ -1151,6 +1158,38 @@ with shared.gradio_root as block:
                 elem_classes="hint-container",
             )
 
+            @performance_add.click(
+                api_visibility='undocumented',
+                inputs=[performance_selection],
+                outputs=[perf_name] + performance_outputs,
+            )
+            def performance_add_clicked(perf):
+                return [gr.update(value="")] + [gr.update(visible=True)] * len(performance_outputs)
+            @performance_delete.click(
+                api_visibility='undocumented',
+                inputs=[performance_selection],
+                outputs=[performance_selection],
+            )
+            def performance_delete_clicked(perf_name):
+                perf_options = performance_settings.load_performance()
+                choices = list(perf_options.keys()) + [
+                    performance_settings.CUSTOM_PERFORMANCE
+                ]
+                if perf_name == settings.get("performance", ""):
+                    gr.Info(f"ERROR: Can't remove \"{perf_name}\" since it is the default selection.")
+                    perf_name = ""
+                if perf_name != "":
+                    try:
+                        print(f"INFO: removing performance \"{perf_name}\"")
+                        del perf_options[perf_name]
+                        choices.remove(perf_name)
+                    except Exception as e:
+                        print(f"ERROR: performance_delete_clicked: {e}")
+                    performance_settings.save_performance(perf_options)
+                    return gr.update(choices=choices, value=settings.get("performance", choices[0]))
+                else:
+                    return gr.update()
+
             @performance_selection.change(
                 api_visibility='undocumented',
                 inputs=[performance_selection],
@@ -1177,7 +1216,7 @@ with shared.gradio_root as block:
             )
             def performance_changed_update_custom(selection):
                 # Skip if Custom was selected
-                if selection == performance_settings.CUSTOM_PERFORMANCE:
+                if selection == performance_settings.CUSTOM_PERFORMANCE or selection == None:
                     return [gr.update()] * 5
 
                 # Update Custom values based on selected Performance mode

@@ -195,7 +195,23 @@ class ImageBrowser:
         if page == None:
             page = 1
         result = self.sql_conn.execute(
-            f"SELECT fullpath, path FROM images WHERE json LIKE '%{self.filter}%' ORDER BY path DESC LIMIT ? OFFSET ?",
+            #f"SELECT fullpath, path FROM images WHERE json LIKE '%{self.filter}%' ORDER BY path GLOB '[0-9]*' DESC, Upper(path) ASC LIMIT ? OFFSET ?",
+            f"SELECT fullpath, path FROM images\
+              WHERE json LIKE '%{self.filter}%'\
+              ORDER BY\
+                CASE\
+                  WHEN path GLOB '[0-9]*' THEN 0\
+                  ELSE 1\
+                END,\
+                CASE\
+                  WHEN path GLOB '[0-9]*'\
+                  THEN path\
+                END DESC,\
+                CASE\
+                  WHEN path NOT GLOB '[0-9]*'\
+                  THEN Upper(path)\
+                END ASC\
+                LIMIT ? OFFSET ?",
             (
                 str(self.images_per_page),
                 str((page-1)*self.images_per_page),

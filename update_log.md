@@ -1,3 +1,7 @@
+### 26.05.30
+* [PixelDiT](https://huggingface.co/Comfy-Org/PixelDiT/tree/main/diffusion_models) support
+* Support for manual [torch installation](https://github.com/runew0lf/RuinedFooocus/wiki/Installation#torchruntime-and-torch-version)
+
 ### 26.05.12
 * [HiDreamO1](https://huggingface.co/Comfy-Org/HiDream-O1-Image) support
 

@@ -171,8 +171,31 @@ class pipeline:
                 repo = pygit2.Repository(".")
                 print(f"#!: Switching to branch {data}. Please restart.")
                 try:
-                    repo.checkout(repo.branches[data])
+                    remote_ref = f"origin/{data}"
+                    remote_branch = repo.lookup_branch(remote_ref,pygit2.GIT_BRANCH_REMOTE)
+                    local_branch = repo.lookup_branch(data)
+
+                    if local_branch is None:
+                        commit = repo.get(remote_branch.target)
+                        local_branch = repo.create_branch(data, commit)
+                        local_branch.upstream = remote_branch
+
+                    repo.set_head(local_branch.name)
+                    repo.checkout_head()
                 except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    print(f"ERROR: {e}")
+
+            case "hf_login":
+                import huggingface_hub # requires !pip install huggingface_hub
+
+                print("INFO: Go to https://huggingface.co/settings/tokens to create an account and get a HF_TOKEN if you need one.")
+                try:
+                    huggingface_hub.login()
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
                     print(f"ERROR: {e}")
 
             case _:

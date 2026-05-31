@@ -61,12 +61,14 @@ from comfy_extras.nodes_sd3 import EmptySD3LatentImage
 from comfy_extras.nodes_flux import FluxKontextImageScale, EmptyFlux2LatentImage
 from comfy_extras.nodes_hunyuan import EmptyHunyuanImageLatent, EmptyHunyuanLatentVideo
 from comfy_extras.nodes_hidream_o1 import EmptyHiDreamO1LatentImage, HiDreamO1PatchSeamSmoothing
+from comfy_extras.nodes_chroma_radiance import EmptyChromaRadianceLatentImage
 from comfy_extras.nodes_edit_model import ReferenceLatent
 from comfy_extras.nodes_qwen import TextEncodeQwenImageEdit
 from node_helpers import conditioning_set_values
 
 from comfy.samplers import KSampler
 from comfy.sample import fix_empty_latent_channels
+from comfy_extras.nodes_model_advanced import ModelNoiseScale
 from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
 from comfy_extras.nodes_canny import Canny
 from comfy_extras.nodes_freelunch import FreeU
@@ -114,13 +116,15 @@ class pipeline:
             "clip_aura": "clip_aura.safetensors",
             "clip_g": "clip_g.safetensors",
             "clip_gemma": "gemma_2_2b_fp16.safetensors",
+            "clip_gemma2_it": "gemma_2_2b_it_bf16.safetensors",
+            "clip_gemma2_it_elm": "gemma_2_2b_it_elm_fp8_scaled.safetensors",
             "clip_gemma3": "gemma_3_4b_it_bf16.safetensors",
             "clip_jina": "jina_clip_v2_bf16.safetensors",
             "clip_l": "clip_l.safetensors",
             "clip_llama": "llama_q2.gguf",
             "clip_ministral3": "ministral-3-3b.safetensors",
             "clip_mistral3": "mistral_3_small_flux2_fp8.safetensors",
-            "clip_qwen25": "qwen_2.5_vl_7b_edit-q2_k.gguf",
+            "clip_qwen25": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
             "clip_qwen3_4b": "Qwen3-4B-Q4_K_M.gguf",
             "clip_qwen3_8b": "Qwen3-8B-Q8_0.gguf",
             "clip_qwen3_06b": "qwen_3_06b_base.safetensors",
@@ -221,13 +225,9 @@ class pipeline:
         "HiDreamO1": {
             "latent": "HiDreamO1",
             "clip_type": comfy.sd.CLIPType.HIDREAM, #FIXME
-            "clip_names": [ #FIXME
-                get_clip_name("clip_g"),
-                get_clip_name("clip_l"),
-                get_clip_name("clip_llama"),
-                get_clip_name("clip_t5")
-            ],
-            "vae_name": get_vae_name("vae_flux"), #FIXME
+            "clip_names": [], #FIXME
+            "vae_name": "pixel_space",
+            "options": {"ModelNoiseScale": 8.0, "HiDreamO1SeamSmoothing": True}
         },
         "Lumina2": {
             "latent": "SD3",
@@ -250,6 +250,12 @@ class pipeline:
             "clip_type": comfy.sd.CLIPType.PIXART,
             "clip_names": [get_clip_name("clip_t5")],
             "vae_name": get_vae_name("vae_pixart"),
+        },
+        "PixelDiTT2I": {
+            "latent": "ChromaRadience",
+            "clip_type": comfy.sd.CLIPType.PIXELDIT,
+            "clip_names": [get_clip_name("clip_gemma2_it_elm")],
+            "vae_name": "pixel_space",
         },
         "QwenImage": {
             "latent": "SD3",
@@ -438,16 +444,20 @@ class pipeline:
                             clip_loader.load_data(clip_paths)
                         )
 
-                    vae_path = path_manager.get_folder_file_path(
-                        "vae",
-                        model_info['vae_name'],
-                        default = os.path.join(path_manager.model_paths["vae_path"], model_info['vae_name'])
-                    )
-                    print(f"Loading VAE: {model_info['vae_name']}")
-                    if str(vae_path).endswith(".gguf"):
-                        sd = load_gguf_sd(str(vae_path))
+                    if model_info['vae_name'] == "pixel_space":
+                        sd = {}
+                        sd["pixel_space_vae"] = torch.tensor(1.0)
                     else:
-                        sd = comfy.utils.load_torch_file(str(vae_path))
+                        vae_path = path_manager.get_folder_file_path(
+                            "vae",
+                            model_info['vae_name'],
+                            default = os.path.join(path_manager.model_paths["vae_path"], model_info['vae_name'])
+                        )
+                        print(f"Loading VAE: {model_info['vae_name']}")
+                        if str(vae_path).endswith(".gguf"):
+                            sd = load_gguf_sd(str(vae_path))
+                        else:
+                            sd = comfy.utils.load_torch_file(str(vae_path))
                     vae = comfy.sd.VAE(sd=sd)
 
                     clip_vision = None
@@ -517,6 +527,29 @@ class pipeline:
                 self.xl_base_patched = self.xl_base
                 self.xl_base_patched_hash = None
                 self.model_info = self.get_clip_and_vae(self.xl_base_patched.unet)
+
+        # Model Options
+        try:
+            self.model_info = self.get_clip_and_vae(self.xl_base.unet)
+        except:
+            return
+        options = self.model_info.get("options", {})
+        if options.get("ModelNoiseScale", None) is not None:
+            self.xl_base.unet = ModelNoiseScale().patch(
+                model=self.xl_base.unet,
+                noise_scale=options.get("ModelNoiseScale", 0.0),
+            )[0]
+        if options.get("HiDreamO1SeamSmoothing", False):
+            self.xl_base.unet = HiDreamO1PatchSeamSmoothing().execute(
+                model=self.xl_base.unet,
+                start_percent=0.80,
+                end_percent=1.00,
+                pattern='single_shift',
+                passes='ramp_2_4',
+                blend='median',
+                strength=1.00,
+            )[0]
+
         return
 
     def load_loras(self, loras):
@@ -803,6 +836,10 @@ class pipeline:
                     latent = EmptyHunyuanImageLatent().generate(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1
                     )[0]
+                case "ChromaRadience":
+                    latent = EmptyChromaRadianceLatentImage().execute(
+                        width=gen_data["width"], height=gen_data["height"], batch_size=1
+                    )[0]
                 case 'SD3':
                     latent = EmptySD3LatentImage().generate(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1
@@ -944,7 +981,6 @@ class pipeline:
         decoded_latent = VAEDecode().decode(
             samples=sampled_latent, vae=self.xl_base_patched.vae
         )[0]
-
         images = [
             np.clip(255.0 * y.cpu().numpy(), 0, 255).astype(np.uint8)
             for y in decoded_latent
