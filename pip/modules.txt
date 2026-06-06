@@ -13,13 +13,13 @@ ftfy==6.1.1
 clip_interrogator==0.6.0
 opencv-python-headless==4.11.0.86
 kornia==0.7.3
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 spandrel==0.3.4
 imageio[pyav]==2.34.1 
 beautifulsoup4==4.12.3
 protobuf==4.25.4
 rembg==2.0.69
-gguf==0.14.0
+gguf==0.19.0
 diskcache==5.6.3
 txtai==9.6.0
 onnxruntime==1.23.2; python_version < "3.13"

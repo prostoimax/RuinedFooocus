@@ -31,17 +31,18 @@ def git_clone(url, dir, name, hash=None):
         pygit2.option(pygit2.GIT_OPT_SET_OWNER_VALIDATION, 0)
 
         try:
-            repo = pygit2.Repository(dir)
+            if Path(dir).is_dir():
+                repo = pygit2.Repository(dir)
+            else:
+                Path(dir).parent.mkdir(exist_ok=True)
+                repo = pygit2.clone_repository(url, str(dir))
+                print(f"{name} cloned.")
         except:
-            Path(dir).parent.mkdir(exist_ok=True)
-            repo = pygit2.clone_repository(url, str(dir))
-            print(f"{name} cloned.")
+            print(f"ERROR: Cloning {name} failed!")
 
         remote = repo.remotes["origin"]
         remote.fetch()
-
         commit = repo.get(hash)
-
         repo.checkout_tree(commit, strategy=pygit2.GIT_CHECKOUT_FORCE)
         print(f"{name} update check complete.")
     except Exception as e:
