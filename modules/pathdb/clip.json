@@ -84,6 +84,21 @@
         "path": "path_clip",
         "filename": "gemma_3_4b_it_bf16.gguf"
     },
+    "clip/qwen3vl_8b_fp8_scaled.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/Boogu-Image/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors",
+        "path": "path_clip",
+        "filename": "qwen3vl_8b_fp8_scaled.safetensors"
+    },
+    "clip/Qwen3-VL-8B-Instruct-Q5_K_M.gguf": {
+        "url": "https://huggingface.co/unsloth/Qwen3-VL-8B-Instruct-GGUF/resolve/main/Qwen3-VL-8B-Instruct-Q5_K_M.gguf",
+        "path": "path_clip",
+        "filename": "Qwen3-VL-8B-Instruct-Q5_K_M.gguf"
+    },
+    "clip/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf": {
+        "url": "https://huggingface.co/HauhauCS/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf",
+        "path": "path_clip",
+        "filename": "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf"
+    },
     "clip/jina_clip_v2_bf16.safetensors": {
         "url": "https://huggingface.co/woctordho/comfyui-jina-clip-v2/resolve/main/jina_clip_v2_bf16.safetensors",
         "path": "path_clip",

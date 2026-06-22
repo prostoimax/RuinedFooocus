@@ -6,17 +6,6 @@ css = """
   overflow-x:hidden;
   overflow-y:scroll;
 }
-/* custom css start*/
-#component-19 {
-    position: ;
-}
-#component-7 {
-    height: 100% !important;
-}
-.gradio-container.gradio-container-5-35-0 .contain .type_row{
-    height: 150px;
-}
-/* custom css ends*/
 /* Style the progress bar */
 progress {
   appearance: none; /* Remove default styling */
@@ -67,9 +56,6 @@ progress::after {
 .json-container{
   height: 600px;
   overflow: auto !important;
-}
-.type_row{
-  height: 150px !important;
 }
 .type_small_row{
   height: 100px !important;

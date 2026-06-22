@@ -13,8 +13,16 @@ class OneButtonPresets:
         self.opb_presets = self.load_obp_presets()
 
     def load_obp_presets(self):
-        default_data = self._load_data(self.DEFAULT_OBP_FILE)
-        data = self._load_data(self.OBP_FILE)
+        try:
+            default_data = self._load_data(self.DEFAULT_OBP_FILE)
+        except:
+            print(f"ERROR: Failed to load {self.DEFAULT_OBP_FILE}")
+            default_data = {}
+        try:
+            data = self._load_data(self.OBP_FILE)
+        except:
+            print(f"ERROR: Failed to load {self.OBP_FILE}")
+            data = {}
 
         for name, settings in default_data.items():
             if name not in data:
@@ -25,7 +33,10 @@ class OneButtonPresets:
             if settings['subject'] == '------ all':
                 settings['subject'] = 'all'
 
-        self._save_data(self.OBP_FILE, data)
+        try:
+            self._save_data(self.OBP_FILE, data)
+        except:
+            print(f"ERROR: Failed to save {self.OBP_FILE}")
         return data
 
     def _load_data(self, file_path):

@@ -157,16 +157,15 @@ def create_chat():
                     show_label=True,
                 )
                 with gr.Row():
+                    llama_reload = gr.Button(value="↻")
                     llama_assistants = gr.Dropdown(
                         choices=llama_get_assistants(),
                         value=_llama_select_assistant(default_bot)["name"],
-                        show_label=False,
+                        label="Chatbot",
+                        show_label=True,
                         interactive=True,
                         scale=7,
-                    )
-                    llama_reload = gr.Button(
-                        value="↻",
-                        scale=1,
+                        buttons=[llama_reload],
                     )
                 llama_system = gr.Textbox(
                     visible='hidden',

@@ -1,2 +1,2 @@
-You can replace the model thumbnails from Civitai with your own images. Look in your models folder.
+You can replace the model thumbnails from Civitai with your own images. Look in the RuinedFooocus/cache folder.
 Keywords for LoRAs are retrieved from Civitai. Use the "LoRA keywords" style to automatically add them to you prompt.

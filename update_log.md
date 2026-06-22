@@ -1,3 +1,7 @@
+### 26.06.21
+* Limited [Ideogram4](https://huggingface.co/ideogram-ai/ideogram-4-fp8) support
+* [Boogu-Image](https://huggingface.co/Boogu/Boogu-Image-0.1-Base) support
+
 ### 26.05.30
 * [PixelDiT](https://huggingface.co/Comfy-Org/PixelDiT/tree/main/diffusion_models) support
 * Support for manual [torch installation](https://github.com/runew0lf/RuinedFooocus/wiki/Installation#torchruntime-and-torch-version)

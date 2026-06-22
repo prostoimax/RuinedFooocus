@@ -17,14 +17,16 @@ def process_metadata(gen_data):
         else:
             meta = json.loads(gen_data["prompt"])
         meta = dict((k.lower(), v) for k, v in meta.items())
-        gen_data.update(meta)
-        if "prompt" in meta:
-            gen_data["style_selection"] = []
-
-        if "steps" in meta:
-            gen_data["custom_steps"] = int(meta["steps"])
     except:
+        meta = {}
         pass
+
+    if "prompt" in meta:
+        gen_data.update(meta)
+        gen_data["style_selection"] = []
+
+    if "steps" in meta:
+        gen_data["custom_steps"] = int(meta["steps"])
     return gen_data
 
 

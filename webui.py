@@ -392,7 +392,6 @@ with shared.gradio_root as block:
                                 placeholder=t("Type prompt here."),
                                 container=False,
                                 autofocus=True,
-                                elem_classes="type_row",
                                 lines=5,
                                 value=settings["prompt"],
                                 scale=5,
@@ -1033,7 +1032,7 @@ with shared.gradio_root as block:
                         ),
                         lora_active_gallery: gr.update(
                             value=active,
-                            selected_index=lora_active_selected,
+                            selected_index=None,
                         ),
                         lora_keywords: gr.update(value=keywords),
                     }
@@ -1473,4 +1472,4 @@ launch_app(args)
 
 # Wait...
 while True:
-    time.sleep(100)
+    time.sleep(100) # Waiting to exit

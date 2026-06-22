@@ -16,6 +16,7 @@ from PIL import Image, ImageOps
 from comfy.model_base import (
     AuraFlow,
     BaseModel,
+    Boogu,
     CosmosPredict2,
     Flux,
     Flux2,
@@ -128,6 +129,8 @@ class pipeline:
             "clip_qwen3_4b": "Qwen3-4B-Q4_K_M.gguf",
             "clip_qwen3_8b": "Qwen3-8B-Q8_0.gguf",
             "clip_qwen3_06b": "qwen_3_06b_base.safetensors",
+            "clip_qwen3vl_8b": "Qwen3-VL-8B-Instruct-Q5_K_M.gguf",
+            "clip_qwen3vl_8b_scaled": "qwen3vl_8b_fp8_scaled.safetensors",
             "clip_oldt5": "t5xxl_old_fp32-q4_0.gguf",
             "clip_t5": "t5-v1_1-xxl-encoder-Q3_K_S.gguf",
         }
@@ -170,6 +173,11 @@ class pipeline:
             "clip_type": comfy.sd.CLIPType.STABLE_DIFFUSION,
             "clip_names": [get_clip_name("clip_l")],
             "vae_name": get_vae_name("vae_sd")
+        },
+        "Boogu": {
+            "clip_type": comfy.sd.CLIPType.BOOGU,
+            "clip_names": [get_clip_name("clip_qwen3vl_8b_scaled")],
+            "vae_name": get_vae_name("vae_flux"),
         },
         "CosmosPredict2": {
             "latent": "SD3",
@@ -224,10 +232,16 @@ class pipeline:
         },
         "HiDreamO1": {
             "latent": "HiDreamO1",
-            "clip_type": comfy.sd.CLIPType.HIDREAM, #FIXME
-            "clip_names": [], #FIXME
+            "clip_type": comfy.sd.CLIPType.HIDREAM,
+            "clip_names": [],
             "vae_name": "pixel_space",
             "options": {"ModelNoiseScale": 8.0, "HiDreamO1SeamSmoothing": True}
+        },
+        "Ideogram4": {
+            "latent": "FLUX2",
+            "clip_type": comfy.sd.CLIPType.IDEOGRAM4,
+            "clip_names": [get_clip_name("clip_qwen3vl_8b")],
+            "vae_name": get_vae_name("vae_flux2")
         },
         "Lumina2": {
             "latent": "SD3",
@@ -337,11 +351,19 @@ class pipeline:
         if self.xl_base_hash is not None and (self.xl_base_hash == name or self.xl_base_hash == hash):
             return
 
-        default_name = path_manager.get_folder_file_path(
-            "checkpoints",
-            settings.default_settings.get("base_model", "sd_xl_base_1.0_0.9vae.safetensors"),
-        )
-        default = shared.models.get_file("checkpoints", default_name)
+        self.xl_base = None
+        self.xl_base_hash = None
+        self.xl_base_patched = None
+        self.xl_base_patched_hash = None
+        self.conditions = None
+        self.model_info = None
+
+        #default_name = path_manager.get_folder_file_path(
+        #    "checkpoints",
+        #    settings.default_settings.get("base_model", "sd_xl_base_1.0_0.9vae.safetensors"),
+        #)
+        #default = shared.models.get_file("checkpoints", default_name)
+        default = None
 
         filename = shared.models.get_model_path(
             "checkpoints",
@@ -351,6 +373,7 @@ class pipeline:
         )
 
         if filename is None:
+            print(f"ERROR: Could not load checkpoint {name}")
             return
 
         if Path(filename).suffix == '.merge':
@@ -360,12 +383,6 @@ class pipeline:
         if input_unet is None: # Be quiet if we already loaded a unet
             print(f"Loading base {'unet' if unet_only else 'model'}: {name}")
 
-        self.xl_base = None
-        self.xl_base_hash = None
-        self.xl_base_patched = None
-        self.xl_base_patched_hash = None
-        self.conditions = None
-        self.model_info = None
         gc.collect(generation=2)
 
         comfy.model_management.cleanup_models()
@@ -727,7 +744,7 @@ class pipeline:
             if self.textencode("-", negative_prompt, clip_skip):
                 updated_conditions = True
 
-            if "[" in positive_prompt and "]" in positive_prompt:
+            if "[" in positive_prompt and "]" in positive_prompt and not positive_prompt.strip().startswith("{"):
                 if controlnet is not None and input_image is not None:
                     print("ControlNet and [prompt|switching] do not work well together.")
                     print("ControlNet will only be applied to the first prompt.")

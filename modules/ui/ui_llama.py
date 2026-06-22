@@ -9,17 +9,13 @@ def add_llama_tab(prompt):
         return gr.update(value=res)
 
     with gr.Group(), gr.Row():
+        llama_btn = gr.Button(value="Run 🦙, run.")
         llama_select = gr.Dropdown(
             choices=llama_names(),
-            show_label=False,
-            scale=4,
+            label="Prompt rewrite Llama",
+            show_label=True,
+            buttons=[llama_btn],
         )
-        llama_btn = gr.Button(
-            value="🦙",
-            scale=1,
-            min_width=1,
-        )
-
     llama_btn.click(
         run_llama_run,
         api_visibility='undocumented',
