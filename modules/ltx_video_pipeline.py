@@ -26,9 +26,10 @@ from tqdm import tqdm
 
 #from calcuis_gguf.pig import load_gguf_sd, GGMLOps, GGUFModelPatcher, load_gguf_clip
 #from calcuis_gguf.pig import DualClipLoaderGGUF as DualCLIPLoaderGGUF
-from comfyui_gguf.nodes import gguf_sd_loader as load_gguf_sd, DualCLIPLoaderGGUF, GGUFModelPatcher
-from comfyui_gguf.ops import GGMLOps
-
+#from comfyui_gguf.nodes import gguf_sd_loader as load_gguf_sd, DualCLIPLoaderGGUF, GGUFModelPatcher
+#from comfyui_gguf.ops import GGMLOps
+from molbal_comfyui_gguf.nodes import gguf_sd_loader as load_gguf_sd, DualCLIPLoaderGGUF, GGUFModelPatcher
+from molbal_comfyui_gguf.ops import GGMLOps
 
 from nodes import (
     CLIPTextEncode,
@@ -71,7 +72,7 @@ class pipeline:
 
     # Optional function
     def parse_gen_data(self, gen_data):
-        gen_data["original_image_number"] = 1 + ((int(gen_data["image_number"] / 4.0) + 1) * 4)
+        gen_data["original_image_number"] = gen_data["image_number"] 
         gen_data["image_number"] = 1
         gen_data["show_preview"] = False
         return gen_data
@@ -133,10 +134,9 @@ class pipeline:
                             default = os.path.join(path_manager.model_paths["clip_path"], clip_name)
                         )
                         clip_paths.append(str(clip_path))
-
                         clip_type = comfy.sd.CLIPType.HUNYUAN_VIDEO
-                        # https://huggingface.co/calcuis/hunyuan-gguf/tree/main
-                        vae_name = settings.default_settings.get("vae_ltxv", "pig_video_97_vae_fp32-f16.gguf") # FIXME!!!
+
+                        vae_name = settings.default_settings.get("vae_ltxv", "LTX-Video-0.9.6-VAE-BF16.safetensors")
 
                     else:
                         print(f"ERROR: Not a LTX Video model?")
@@ -166,9 +166,11 @@ class pipeline:
                     )
 
                     print(f"Loading VAE: {vae_name}")
-                    sd = load_gguf_sd(str(vae_path))
+                    if str(vae_path).endswith(".gguf"):
+                        sd = load_gguf_sd(str(vae_path))
+                    else:
+                        sd = comfy.utils.load_torch_file(str(vae_path))
                     vae = comfy.sd.VAE(sd=sd)
-
 
                     clip_vision = None
                 except Exception as e:
@@ -437,6 +439,9 @@ class pipeline:
     ):
         seed = gen_data["seed"] if isinstance(gen_data["seed"], int) else random.randint(1, 2**32)
 
+        fps = settings.default_settings.get("fps", 30)
+        gen_data["frames"] = 1 + (int(gen_data["original_image_number"] * fps / 4.0) * 4)
+
         if callback is not None:
             worker.add_result(
                 gen_data["task_id"],
@@ -493,7 +498,7 @@ class pipeline:
                 vae = self.model_base_patched.vae,
                 width = gen_data["width"],
                 height = gen_data["height"],
-                length = gen_data["original_image_number"],
+                length = gen_data["frames"],
                 batch_size = 1,
                 strength = 1,
             )
@@ -502,7 +507,7 @@ class pipeline:
             latent_image = EmptyLTXVLatentVideo().generate(
                 width = gen_data["width"],
                 height = gen_data["height"],
-                length = gen_data["original_image_number"],
+                length = gen_data["frames"],
                 batch_size = 1,
             )[0]
             positive = self.conditions["+"]["cache"]
@@ -510,10 +515,10 @@ class pipeline:
         negative = self.conditions["-"]["cache"]
 
         # LTXVConditioning
-        positive, negative = LTXVConditioning().append(
+        positive, negative = LTXVConditioning().execute(
             positive = positive,
             negative = negative,
-            frame_rate = settings.default_settings.get("fps", 12)
+            frame_rate = fps
         )
 
         # Sampler
@@ -522,7 +527,7 @@ class pipeline:
         )[0]
 
         # Sigmas
-        sigmas = LTXVScheduler().get_sigmas(
+        sigmas = LTXVScheduler().execute(
             steps = gen_data["steps"],
             max_shift = 2.05,
             base_shift = 0.95,
@@ -583,7 +588,6 @@ class pipeline:
         )
         os.makedirs(os.path.dirname(file), exist_ok=True)
 
-        fps=12.0
         compress_level=9 # Min = 0, Max = 9
 
         # Save GIF

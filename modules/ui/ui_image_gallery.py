@@ -1,5 +1,5 @@
 import gradio as gr
-from shared import path_manager, translate
+from shared import path_manager, translate, get_ctrl
 from modules.imagebrowser import ImageBrowser
 
 browser = ImageBrowser()
@@ -31,7 +31,8 @@ def create_image_gallery():
             # Right side for metadata and search
             with gr.Column(scale=1):
                 with gr.Row():
-                    update_btn = gr.Button(t("Update DB"), scale=5)
+                    update_btn = gr.Button(t("Update DB"), scale=3)
+                    copymeta_btn = gr.Button(t("Copy to prompt"), scale=3)
                     gr.HTML(value="""<a href="gradio_api/file/html/slideshow.html" style="color: gray; text-decoration: none" target="_blank">🛝</a>""")
                 metadata_output = gr.Textbox(
                     label=t("Image Metadata"), interactive=False, lines=15
@@ -41,6 +42,10 @@ def create_image_gallery():
                 )
                 search_btn = gr.Button(t("Search"))
                 status_output = gr.Markdown()
+                metadata_json = gr.JSON(
+                    value={},
+                    visible='hidden'
+                )
 
         # Event handlers
         update_btn.click(
@@ -54,10 +59,16 @@ def create_image_gallery():
             inputs=[ib_page],
             outputs=[gallery, ib_range],
         )
+        copymeta_btn.click(
+            fn=browser.copy_metadata,
+            api_visibility='undocumented',
+            inputs=[metadata_json],
+            outputs=[get_ctrl("prompt")],
+        )
         gallery.select(
             fn=browser.get_image_metadata,
             api_visibility='undocumented',
-            outputs=[metadata_output],
+            outputs=[metadata_json, metadata_output],
         )
         search_btn.click(
             fn=browser.search_metadata,
@@ -74,7 +85,6 @@ def create_image_gallery():
 
 
     return app_image_browser
-
 
 # Optional: If you want to launch just this gallery
 def launch_image_gallery():

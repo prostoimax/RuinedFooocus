@@ -11,7 +11,8 @@ import json
 
 
 def get_wildcard_files():
-    directories = ["wildcards", "wildcards_official"]
+    directories = path_manager.paths.get("path_wildcards", ["wildcards"])
+    directories.append("wildcards_official")
     files = []
 
     for directory in directories:

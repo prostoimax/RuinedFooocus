@@ -8,6 +8,7 @@ from random_prompt.build_dynamic_prompt import (
     build_dynamic_prompt,
     build_dynamic_negative,
 )
+from shared import path_manager
 
 
 def process_metadata(gen_data):
@@ -34,7 +35,7 @@ def get_promptlist(gen_data):
     return gen_data["prompt"].split("---")
 
 
-def process_wildcards(wildcard_text, directory="wildcards"):
+def process_wildcards(wildcard_text, directory=path_manager.paths.get("path_wildcards", ["wildcards"])):
     # removed regex method
     placeholders = []
     splitup = wildcard_text.split("__")
@@ -45,7 +46,7 @@ def process_wildcards(wildcard_text, directory="wildcards"):
     placeholder_choices = {}  # Store random choices for each placeholder
     official_directory = "wildcards_official"
     directories = []
-    directories.append(directory)
+    directories += directory
     directories.append(official_directory)
 
     for placeholder in placeholders:

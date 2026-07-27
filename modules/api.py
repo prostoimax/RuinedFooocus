@@ -11,6 +11,20 @@ from shared import (
     settings,
 )
 import modules.search_pipeline as search_pipeline
+from fastapi.responses import Response
+from io import BytesIO
+from PIL import Image, ImageOps
+
+# "secret" pi slideshow
+def get_last_image() -> str:
+    """
+    Internal use for the secret pi slideshow
+    """
+    global state
+    if "last_image" in state:
+        return state["last_image"]
+    else:
+        return "html/logo.png"
 
 def add_api():
 
@@ -114,13 +128,27 @@ def add_api():
     gr.api(api_version, api_name="api_version")
 
     # "secret" pi slideshow
-    def get_last_image() -> str:
-        """
-        Internal use for the secret pi slideshow
-        """
-        global state
-        if "last_image" in state:
-            return state["last_image"]
-        else:
-            return "html/logo.png"
     gr.api(get_last_image, api_name="last_image")
+
+def add_fastapi():
+    async def last_image(w: int = 0, h: int = 0, format: str = "PNG"):
+        filename = get_last_image()
+        img = Image.open(filename)
+        ow, oh = img.size
+        if w > 0 or h > 0:
+            if w == 0: w = int(ow * h / oh)
+            if h == 0: h = int(oh * w / ow)
+            img = ImageOps.fit(img, (w, h), method=Image.Resampling.LANCZOS, bleed=0.0, centering=(0.5, 0.5))
+        if format == "JPEG": img = img.convert("RGB")
+        buf = BytesIO()
+        img.save(buf, format=format)
+        return Response(
+            content=buf.getvalue(),
+            media_type=f"image/{format.lower()}",
+        )
+    shared.server_app.add_api_route(
+        "/last_image",
+        last_image,
+        methods=["GET"]
+    )
+

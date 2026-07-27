@@ -479,7 +479,11 @@ class Models:
                 with open(path, "wb") as file:
                     file.write(out)
 
-                fps = iio.immeta(path).get("fps", False)
+                try:
+                    fps = iio.immeta(path).get("fps", False)
+                except Exception as e:
+                    print(f"WARNING: Could not read/decode {path}: Please remove it: {e}")
+                    break
                 if format == "video" and fps:
                     tmp_path = f"{path}.tmp"
                     shutil.move(path, tmp_path)

@@ -48,7 +48,7 @@ git_repos = [
         "name": "ComfyUI",
         "path": "ComfyUI",
         "url": "https://github.com/comfyanonymous/ComfyUI",
-        "hash": "603d891eaf045d726d9c23276b4428daf2977624",
+        "hash": "806e092ed42772e4ce7abf44c97c50021cc4bd10",
         "add_path": "ComfyUI",
     },
 #    {
@@ -58,11 +58,18 @@ git_repos = [
 #        "hash": "34a4e030afea0137c5e781e07400bdbe00e9d524",
 #        "add_path": "",
 #    },
+#    {
+#        "name": "ComfyUI-GGUF",
+#        "path": "comfyui_gguf",
+#        "url": "https://github.com/city96/ComfyUI-GGUF",
+#        "hash": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a",
+#        "add_path": "",
+#    },
     {
-        "name": "ComfyUI-GGUF",
-        "path": "comfyui_gguf",
-        "url": "https://github.com/city96/ComfyUI-GGUF",
-        "hash": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a",
+        "name": "molbal/ComfyUI-GGUF",
+        "path": "molbal_comfyui_gguf",
+        "url": "https://github.com/molbal/ComfyUI-GGUF",
+        "hash": "73439d2120c2e465fbdf7eb9e98c17ef592e5da3",
         "add_path": "",
     },
 ]
@@ -135,14 +142,16 @@ def prepare_environment(offline=False):
             run_pip(f'install -r "{modules_file}"', "required modules")
 
         try:
-            xlc_version = "xllamacpp==0.2.7"
+            xlc_version = "xllamacpp==2026.7.9873"
             if REINSTALL_ALL or not is_installed(xlc_version):
                 platform_index = {
-                    'cu124': 'https://xorbitsai.github.io/xllamacpp/whl/cu124',
+                    'cu124': 'https://xorbitsai.github.io/xllamacpp/whl/vulkan',
                     'cu128': 'https://xorbitsai.github.io/xllamacpp/whl/cu128',
-                    'rocm6.3': 'https://xorbitsai.github.io/xllamacpp/whl/rocm-6.3.4',
+                    'cu132': 'https://xorbitsai.github.io/xllamacpp/whl/cu132',
                     'rocm6.4': 'https://xorbitsai.github.io/xllamacpp/whl/rocm-6.4.1',
-                    'cpu': 'https://pypi.org/simple'
+                    'rocm7.2': 'https://xorbitsai.github.io/xllamacpp/whl/rocm-7.2.4',
+                    'cpu': 'https://pypi.org/simple',
+                    'vulkan': 'https://xorbitsai.github.io/xllamacpp/whl/vulkan'
                 }
                 if torch_platform not in platform_index:
                     torch_platform = 'cpu'

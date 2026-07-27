@@ -110,11 +110,19 @@ function generate_shortcut(){
     let handle = 'none';
     if (e.key !== undefined) {
       if ((e.key === 'Enter' && e.ctrlKey)) handle = 'run';
+      if ((e.key === 'q' && e.ctrlKey)) handle = 'edit_mode';
+      if ((e.key === 'Escape')) handle = 'edit_mode';
     } else if (e.keyCode !== undefined) {
       if ((e.keyCode === 13 && e.ctrlKey)) handle = 'run';
+      if ((e.keyCode === 81 && e.ctrlKey)) handle = 'edit_mode';
+      if ((e.keyCode === 27)) handle = 'edit_mode';
     }
     if (handle == 'run') {
       const button = document.getElementById('generate');
+      if (button) button.click();
+      e.preventDefault();
+    } else if (handle == 'edit_mode') {
+      const button = document.getElementById('edit_mode');
       if (button) button.click();
       e.preventDefault();
     }

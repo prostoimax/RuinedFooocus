@@ -9,7 +9,7 @@ import sqlite3
 import time
 from modules.path import PathManager # FIXME import from shared?
 from modules.util import TimeIt
-from shared import settings
+from shared import settings, state
 import version
 
 
@@ -51,6 +51,10 @@ def format_metadata(metadata: Dict) -> Dict:
                 if key in params and params[key] is not None:
                     settings[key.capitalize()] = params[key]
             formatted["Settings"] = settings
+
+            # Comment info
+            if "meta_comment" in params:
+                formatted["Meta_Comment"] = params["meta_comment"]
 
             # Software info
             if "software" in params:
@@ -100,6 +104,10 @@ def format_metadata_string(metadata: Dict) -> str:
             for key, value in formatted["Settings"].items():
                 output.append(f"  {key}: {value}")
             output.append("")
+
+        # Comment
+        if "Meta_Comment" in formatted:
+            output.append(f"Comment: {formatted['Meta_Comment']}")
 
         # Software
         if "Software" in formatted:
@@ -281,7 +289,7 @@ class ImageBrowser:
                     gr.update(value=self.load_images(1)[0]),
                     gr.update(
                         value=1,
-                        maximum=int(image_cnt/self.images_per_page) + 1,
+                        maximum=max(int(image_cnt/self.images_per_page) + 1, 2),
                     ),
                     gr.update(
                         value=f"Found {image_cnt} images from {folders} and subdirectories",
@@ -289,7 +297,7 @@ class ImageBrowser:
                 )
             return (
                 gr.update(value=[]),
-                gr.update(value=1, maximum=1),
+                gr.update(value=1, maximum=2),
                 gr.update(value=f"No images found in {folders} or subdirectories")
             )
 
@@ -306,9 +314,29 @@ class ImageBrowser:
             selected_path = self.current_display_paths[evt.index][0]
             result = self.sql_conn.execute("SELECT json FROM images WHERE fullpath = ?", (str(selected_path),))
             data = json.loads(result.fetchone()[0])
-            return format_metadata_string(data)
+            return (
+                gr.update(value=json.loads(data.get('parameters', {}))),
+                gr.update(value=format_metadata_string(data)),
+            )
         except Exception as e:
-            return f"Error getting metadata: {e}"
+            return (
+                gr.update(value=None),
+                gr.update(value=f"Error getting metadata: {e}"),
+            )
+
+    def copy_metadata(self, metadata: dict) -> str:
+        try:
+            if "prompt" in [k.lower() for k in metadata.keys()]:
+                prompt = json.dumps(metadata, indent=4)
+                prompt = prompt.replace("\\n", "\n")
+                gr.Info("Metadata copied to Prompt in Main tab")
+                return gr.update(value=prompt)
+            else:
+                return gr.update()
+        except Exception as e:
+            print(f"ERROR: copy_metadata: {e}")
+            gr.Error("Something went wrong trying to parse Metadata")
+            return gr.update()
 
     def search_metadata(self, search_term: str) -> Tuple[List[str], str]:
         self.filter = search_term

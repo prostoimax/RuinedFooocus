@@ -84,6 +84,11 @@
         "path": "path_clip",
         "filename": "gemma_3_4b_it_bf16.gguf"
     },
+    "clip/qwen3vl_4b_bf16.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/Qwen3-VL/resolve/main/text_encoders/qwen3vl_4b_bf16.safetensors",
+        "path": "path_clip",
+        "filename": "qwen3vl_4b_bf16.safetensors"
+    },
     "clip/qwen3vl_4b_fp8_scaled.safetensors": {
         "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors",
         "path": "path_clip",

@@ -289,6 +289,7 @@ def _process(gen_data):
                 "start_step": start_step,
                 "denoise": denoise,
                 "clip_skip": gen_data["clip_skip"],
+                "comment": settings.default_settings.get("meta_comment", ""),
                 "software": "RuinedFooocus",
             }
             metadata = PngInfo()

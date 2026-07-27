@@ -17,7 +17,8 @@ def save_clicked(*args):
         if key in [
             "archive_folders",
             "path_checkpoints",
-            "path_loras"
+            "path_loras",
+            "path_wildcards",
         ]:
             settings.default_settings[key] = settings.default_settings[key].splitlines()
 
@@ -94,6 +95,23 @@ def create_settings():
                     add_setting("lora_min", lora_min)
                     lora_max = gr.Number(label=t("LoRA weight max"), interactive=True, value=settings.default_settings.get("lora_max", 2))
                     add_setting("lora_max", lora_max)
+
+                gr.Markdown(t("# Preset"))
+                preset_mode = gr.Dropdown(
+                    label=t("Preset Mode"),
+                    interactive=True,
+                    choices=[
+                        ("Full", 7),
+                        ("Models and Performance", 6),
+                        ("Models and Size", 5),
+                        ("Performance and Size", 3),
+                        ("Models only", 4),
+                        ("Performance only", 2),
+                        ("Size only", 1),
+                    ],
+                    value=settings.default_settings.get("preset_mode", 7)
+                )
+                add_setting("preset_mode", preset_mode)
 
                 gr.Markdown(t("# Models to load at startup"))
                 base_model = gr.Dropdown(
@@ -194,6 +212,14 @@ def create_settings():
                 add_setting("path_inbox", path_inbox)
                 path_outputs = gr.Textbox(label=t("Output Folder"), interactive=True, placeholder="", value=path_manager.paths.get("path_outputs", "../outputs/"))
                 add_setting("path_outputs", path_outputs)
+                path_wildcards = gr.Code(
+                    label=t("Wildcard Folders"),
+                    interactive=True,
+                    value="\n".join(path_manager.paths.get("path_wildcards", ["wildcards"])),
+                    lines=5,
+                    max_lines=5
+                )
+                add_setting("path_wildcards", path_wildcards)
 
                 gr.Markdown(t("# Chatbot settings"))
                 curr_localfile = settings.default_settings.get("llama_localfile", None)
@@ -219,6 +245,16 @@ def create_settings():
                 add_setting("interrogator", interrogator)
                 save_metadata = gr.Checkbox(label=t("Save Metadata"), value=settings.default_settings.get("save_metadata", True))
                 add_setting("save_metadata", save_metadata)
+
+                meta_comment = gr.Textbox(
+                    label=t("Metadata Comment (Text added to the metadata)"),
+                    interactive=True,
+                    value=settings.default_settings.get("meta_comment", ""),
+                    lines=5,
+                    max_lines=5
+                )
+                add_setting("meta_comment", meta_comment)
+
                 update_interval = gr.Number(label=t("WebUI update interval"), interactive=True, value=settings.default_settings.get("update_interval", 0.1), minimum=0.01, step=0.01)
                 add_setting("update_interval", update_interval)
                 theme = gr.Textbox(label=t("Theme"), interactive=True, value=settings.default_settings.get("theme", None))

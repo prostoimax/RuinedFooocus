@@ -57,6 +57,9 @@ def add_ctrl(name, obj, configurable=False):
         state["cfg_items_name"] += [name]
         state["cfg_items_obj"] += [obj]
 
+def get_ctrl(name):
+    return state["ctrls_obj"][state["ctrls_name"].index(name)]
+
 def add_setting(name, obj):
     state["setting_name"] += [name]
     state["setting_obj"] += [obj]

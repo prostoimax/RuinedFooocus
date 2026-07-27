@@ -1,6 +1,7 @@
 import gc
 import numpy as np
 import os
+import sys
 import torch
 import traceback
 import math
@@ -65,6 +66,7 @@ from comfy_extras.nodes_hidream_o1 import EmptyHiDreamO1LatentImage, HiDreamO1Pa
 from comfy_extras.nodes_chroma_radiance import EmptyChromaRadianceLatentImage
 from comfy_extras.nodes_edit_model import ReferenceLatent
 from comfy_extras.nodes_qwen import TextEncodeQwenImageEdit
+from comfy_extras.nodes_mage import TextEncodeMageFlowEdit
 from node_helpers import conditioning_set_values
 
 from comfy.samplers import KSampler
@@ -85,8 +87,10 @@ from modules.pipeline_utils import (
 )
 from modules.canny_utils import sanitize_canny_thresholds
 
-from comfyui_gguf.nodes import gguf_sd_loader as load_gguf_sd, DualCLIPLoaderGGUF, GGUFModelPatcher
-from comfyui_gguf.ops import GGMLOps
+#from comfyui_gguf.nodes import gguf_sd_loader as load_gguf_sd, DualCLIPLoaderGGUF, GGUFModelPatcher
+#from comfyui_gguf.ops import GGMLOps
+from molbal_comfyui_gguf.nodes import gguf_sd_loader as load_gguf_sd, DualCLIPLoaderGGUF, GGUFModelPatcher
+from molbal_comfyui_gguf.ops import GGMLOps
 #from calcuis_gguf.pig import load_gguf_sd, GGMLOps, GGUFModelPatcher
 #from calcuis_gguf.pig import DualClipLoaderGGUF as DualCLIPLoaderGGUF
 
@@ -127,6 +131,7 @@ class pipeline:
             "clip_mistral3": "mistral_3_small_flux2_fp8.safetensors",
             "clip_qwen25": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
             "clip_qwen3_4b": "Qwen3-4B-Q4_K_M.gguf",
+            "clip_qwen3vl_4b": "qwen3vl_4b_bf16.safetensors",
             "clip_qwen3vl_4b_scaled": "qwen3vl_4b_fp8_scaled.safetensors",
             "clip_qwen3_8b": "Qwen3-8B-Q8_0.gguf",
             "clip_qwen3_06b": "qwen_3_06b_base.safetensors",
@@ -144,6 +149,7 @@ class pipeline:
             "vae_flux": "ae.safetensors",
             "vae_flux2": "flux2-vae.safetensors",
             "vae_lumina2": "lumina2_vae_fp32.safetensors",
+            "vae_mage_flow": "mage_flow_vae_bf16.safetensors",
             "vae_pixart": "pixart_vae_fp16.safetensors",
             "vae_qwen_image": "qwen_image_vae.safetensors",
             "vae_sd": "sd15_vae.safetensors",
@@ -256,6 +262,13 @@ class pipeline:
             "vae_name": get_vae_name("vae_lumina2"),
             "model_sampling": ('AuraFlow', settings.default_settings.get("lumina2_shift", 3.0))
         },
+        "MageFlow": {
+            "latent": "MAGE",
+            "clip_type": comfy.sd.CLIPType.MAGE,
+            "clip_names": [get_clip_name("clip_qwen3vl_4b")],
+            "vae_name": get_vae_name("vae_mage_flow"),
+            "flags": ["has_image_edit"]
+        },
         "NewBieImage": {
             "latent": "SD3",
             "clip_type": comfy.sd.CLIPType.NEWBIE,
@@ -283,7 +296,7 @@ class pipeline:
             "clip_names": [get_clip_name("clip_qwen25")],
             "vae_name": get_vae_name("vae_qwen_image"),
             "model_sampling": ('AuraFlow', settings.default_settings.get("qwen_image_shift", 3.10)),
-            "flags": ["has_qwen_encode"]
+            "flags": ["has_image_edit"]
         },
         "SD3": {
             "latent": "SD3",
@@ -417,8 +430,13 @@ class pipeline:
                             unet = comfy.sd.load_diffusion_model_state_dict(
                                 input_unet, model_options={"custom_operations": self.ggml_ops}
                             )
-                            unet = GGUFModelPatcher.clone(unet)
-                            unet.patch_on_device = True
+                            try:
+                                unet = GGUFModelPatcher.clone(unet)
+                                unet.patch_on_device = True
+                            except Exception as e:
+                                unet = input_unet
+                                print(f"ERROR: {e}")
+                                traceback.print_exc() 
                     else:
                         model_options = {}
                         model_options["dtype"] = torch.float8_e4m3fn # FIXME should be a setting
@@ -513,7 +531,7 @@ class pipeline:
             if sd is not None:
                 # Try to load as All-In-One checkpoint
                 try:
-                    aio = load_state_dict_guess_config(sd)
+                    aio = load_state_dict_guess_config(sd.copy())
                 except:
                     aio = None
                 if isinstance(aio, tuple):
@@ -727,7 +745,7 @@ class pipeline:
             input_images = 1 # "Counter" for the single input-image we have. (for now)
 
         # Text-encoding
-        if 'has_qwen_encode' in self.model_info.get('flags', []) and input_images > 0:
+        if 'has_image_edit' in self.model_info.get('flags', []) and input_images > 0:
             if callback is not None:
                 worker.add_result(
                     gen_data["task_id"],
@@ -736,18 +754,36 @@ class pipeline:
                 )
             controlnet = None # Disable any other controlnet
             self.conditions = clean_prompt_cond_caches()
-            self.conditions["+"]["cache"] = TextEncodeQwenImageEdit().execute(
-                clip=self.xl_base_patched.clip,
-                prompt=positive_prompt,
-                vae=self.xl_base.vae,
-                image=input_image
-            )[0]
-            self.conditions["-"]["cache"] = TextEncodeQwenImageEdit().execute(
-                clip=self.xl_base_patched.clip,
-                prompt=negative_prompt,
-                vae=self.xl_base.vae,
-                image=input_image
-            )[0]
+
+            match self.xl_base_patched.unet.model.__class__.__name__:
+                case 'QwenImage':
+                    self.conditions["+"]["cache"] = TextEncodeQwenImageEdit().execute(
+                        clip=self.xl_base_patched.clip,
+                        prompt=positive_prompt,
+                        vae=self.xl_base.vae,
+                        image=input_image
+                    )[0]
+                    self.conditions["-"]["cache"] = TextEncodeQwenImageEdit().execute(
+                        clip=self.xl_base_patched.clip,
+                        prompt=negative_prompt,
+                        vae=self.xl_base.vae,
+                        image=input_image
+                    )[0]
+                case 'MageFlow':
+                    img = gen_data["input_image"]
+                    img = np.array(img).astype(np.float32) / 255.0
+                    img = torch.from_numpy(img)[None,]
+                    self.conditions["+"]["cache"], self.conditions["-"]["cache"], latent = TextEncodeMageFlowEdit().execute(
+                        clip=self.xl_base_patched.clip,
+                        vae=self.xl_base_patched.vae,
+                        prompt=positive_prompt,
+                        negative_prompt=negative_prompt,
+                        images={"image_1": img}
+                    ).result
+                case _:
+                    print(f"ERROR: Trying to encode with unknown model {self.xl_base_patched.unet.__class__.__name__}. (This should never happen.")
+                    raise
+
             updated_conditions = True
             img2img_mode = True
             input_images -= 1
@@ -882,6 +918,9 @@ class pipeline:
                     latent = EmptySD3LatentImage().generate(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1
                     )[0]
+                case 'MAGE':
+                    zero_latent = torch.zeros([1, 128, gen_data['height'] // 16, gen_data['width'] // 16], device=comfy.model_management.intermediate_device())
+                    latent = {"samples": zero_latent, "downscale_ratio_spacial": 16}
                 case _:
                     latent = EmptyLatentImage().generate(
                         width=gen_data["width"], height=gen_data["height"], batch_size=1

@@ -49,10 +49,25 @@
         "path": "path_vae",
         "filename": "lumina2_vae_fp32.safetensors"
     },
+    "vae/mage_flow_vae.safetensors": {
+        "url": "https://huggingface.co/microsoft/Mage-Flow-Turbo/resolve/main/vae/diffusion_pytorch_model.safetensors",
+        "path": "path_vae",
+        "filename": "mage_flow_vae.safetensors"
+    },
+    "vae/mage_flow_vae_bf16.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/vae/mage_flow_vae_bf16.safetensors",
+        "path": "path_vae",
+        "filename": "mage_flow_vae_bf16.safetensors"
+    },
     "vae/hunyuan_video_vae_bf16.safetensors": {
         "url": "https://huggingface.co/calcuis/hunyuan-gguf/resolve/main/hunyuan_video_vae_bf16.safetensors",
         "path": "path_vae",
         "filename": "hunyuan_video_vae_bf16.safetensors"
+    },
+    "vae/hunyuanvideo15_vae_fp16.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/vae/hunyuanvideo15_vae_fp16.safetensors",
+        "path": "path_vae",
+        "filename": "hunyuanvideo15_vae_fp16.safetensors"
     },
     "vae/wan_2.1_vae.safetensors": {
         "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
@@ -63,6 +78,11 @@
         "url": "https://huggingface.co/Lightricks/LTX-Video/resolve/main/vae/diffusion_pytorch_model.safetensors",
         "path": "path_vae",
         "filename": "LTX-Video-VAE.safetensors"
+    },
+    "vae/LTX-Video-0.9.6-VAE-BF16.safetensors": {
+        "url": "https://huggingface.co/city96/LTX-Video-0.9.6-dev-gguf/resolve/main/LTX-Video-0.9.6-VAE-BF16.safetensors",
+        "path": "path_vae",
+        "filename": "LTX-Video-0.9.6-VAE-BF16.safetensors"
     },
     "vae/pig_video_97_vae_fp32-f16.gguf": {
         "url": "https://huggingface.co/calcuis/ltxv0.9.7-gguf/resolve/main/pig_video_97_vae_fp32-f16.gguf",
