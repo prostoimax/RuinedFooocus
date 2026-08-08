@@ -1,3 +1,6 @@
+### development
+* [MiniMax H3](https://huggingface.co/MiniMaxAI/MiniMax-H3) support
+
 ### 26.07.26
 * [Mage Flow/Mage Flow Edit](https://huggingface.co/microsoft/Mage-Flow) support
 * Esc to toggle "edit mode"

@@ -59,6 +59,16 @@
         "path": "path_vae",
         "filename": "mage_flow_vae_bf16.safetensors"
     },
+    "vae/minimax_h3_audio_vae_fp32.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+	"path": "path_vae",
+        "filename": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "vae/minimax_h3_video_vae_fp16.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp32.safetensors",
+	"path": "path_vae",
+        "filename": "minimax_h3_video_vae_fp16.safetensors"
+    },
     "vae/hunyuan_video_vae_bf16.safetensors": {
         "url": "https://huggingface.co/calcuis/hunyuan-gguf/resolve/main/hunyuan_video_vae_bf16.safetensors",
         "path": "path_vae",

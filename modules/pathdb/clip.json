@@ -109,6 +109,16 @@
         "path": "path_clip",
         "filename": "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf"
     },
+    "clip/qwen3vl_32b_minimax_h3_int8_convrot.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "path": "path_clip",
+        "filename": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors"
+    },
+    "clip/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "path": "path_clip",
+        "filename": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
+    },
     "clip/jina_clip_v2_bf16.safetensors": {
         "url": "https://huggingface.co/woctordho/comfyui-jina-clip-v2/resolve/main/jina_clip_v2_bf16.safetensors",
         "path": "path_clip",

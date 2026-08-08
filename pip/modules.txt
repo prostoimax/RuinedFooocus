@@ -31,8 +31,8 @@ transformers==5.13.0
 tokenizers==0.22.1
 xmltodict==0.14.2
 websockets==15.0.1
-comfy-kitchen==0.2.22
-comfy-aimdo==0.4.10
+comfy-kitchen==0.2.26
+comfy-aimdo==0.4.11
 requests==2.33.1
 charset_normalizer==3.4.7
 urllib3==2.6.3
