@@ -14,7 +14,6 @@ import modules.hunyuan_video_pipeline as hunyuan_video_pipeline
 import modules.wan_video_pipeline as wan_video_pipeline
 import modules.hashbang_pipeline as hashbang_pipeline
 import modules.ltx_video_pipeline as ltx_video_pipeline
-import modules.ltx2_video_pipeline as ltx2_video_pipeline
 import modules.video_pipeline as video_pipeline
 import modules.controlnet as controlnet
 
@@ -113,15 +112,7 @@ def update(gen_data):
                 baseModel == "LTXV2" or
                 baseModel == "LTXV 2.3" or
                 Path(gen_data['base_model_name']).parts[0] == "LTXV2" or
-                Path(gen_data['base_model_name']).parts[0] == "LTXV 2.3"
-            ):
-                if (
-                    state["pipeline"] is None
-                    or "ltx2_video" not in state["pipeline"].pipeline_type
-                ):
-                    state["pipeline"] = ltx2_video_pipeline.pipeline()
-
-            elif (
+                Path(gen_data['base_model_name']).parts[0] == "LTXV 2.3" or
                 baseModel == "MiniMaxH3" or
                 Path(gen_data['base_model_name']).parts[0] == "MiniMax H3"
             ):

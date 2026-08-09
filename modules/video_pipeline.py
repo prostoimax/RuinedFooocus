@@ -625,14 +625,19 @@ class pipeline:
                     strength = 1,
                 )
             else:
-#                video_latent = EmptyLTXVLatentVideo().generate(
-#                    width = gen_data["width"],
-#                    height = gen_data["height"],
-#                    length = frame_number,
-#                    batch_size = 1,
-#                )[0]
-                video_latent = None
                 positive = self.conditions["+"]["cache"]
+                negative = self.conditions["-"]["cache"]
+                modeltype = self.model_base_patched.unet.model.__class__.__name__
+                match modeltype:
+                    case "LTXAV":
+                        video_latent = EmptyLTXVLatentVideo().generate(
+                            width = gen_data["width"],
+                            height = gen_data["height"],
+                            length = frame_number,
+                            batch_size = 1,
+                        )[0]
+                    case "MiniMaxH3":
+                        video_latent = None
 
             audio_latent = None
             if "need_audio_latent" in self.model_info.get("flags", []):
@@ -654,8 +659,6 @@ class pipeline:
                     video_latent = video_latent,
                     audio_latent = audio_latent,
                 )[0]
-
-        negative = self.conditions["-"]["cache"]
 
         # Conditioning
         modeltype = self.model_base_patched.unet.model.__class__.__name__
