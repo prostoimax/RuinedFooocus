@@ -1,5 +1,7 @@
 ### development
+* [LTX 2.5](https://huggingface.co/Lightricks/LTX-2.5) support
 * [MiniMax H3](https://huggingface.co/MiniMaxAI/MiniMax-H3) support
+* Updated torch version for NVIDIA gpus
 
 ### 26.07.26
 * [Mage Flow/Mage Flow Edit](https://huggingface.co/microsoft/Mage-Flow) support

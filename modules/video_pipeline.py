@@ -102,6 +102,7 @@ class pipeline:
         defaults = {
             "clip_t5": "t5-v1_1-xxl-encoder-Q3_K_S.gguf",
             "clip_gemma3_12b": "gemma-3-12b-it-Q4_0.gguf",
+            "clip_gemma4_12b": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
             "clip_ltx23_text_proj": "ltx-2.3_text_projection_bf16.safetensors",
             "clip_qwen3vl_32b": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
         }
@@ -113,6 +114,8 @@ class pipeline:
             "vae_ltxv_video": "hunyuanvideo15_vae_fp16.safetensors",
             "vae_ltxv23_audio": "LTX23_audio_vae_bf16.safetensors",
             "vae_ltxv23_video": "LTX23_video_vae_bf16.safetensors",
+            "vae_ltxv25_audio": "ltx-2.5-audio-vae-bf16.safetensors",
+            "vae_ltxv25_video": "ltx-2.5-video-vae-bf16.safetensors",
             "vae_minimax_h3_audio": "minimax_h3_audio_vae_fp32.safetensors",
             "vae_minimax_h3_video": "minimax_h3_video_vae_fp16.safetensors",
         }
@@ -136,6 +139,16 @@ class pipeline:
             "flags": ["need_audio_latent"],
             "options": {"guider": "CFGGuider", "scheduler": "LTXVScheduler"}
         },
+        "LTXAV2.5": {
+            "latent": None,
+            "clip_type": comfy.sd.CLIPType.LTXV,
+            "clip_names": [get_clip_name("clip_gemma4_12b")],
+            "vae_name": get_vae_name("vae_ltxv25_video"),
+            "audio_vae_name": get_vae_name("vae_ltxv25_audio"),
+            "frame_cnt": "((frames // 8) * 8) + 1",
+            "flags": ["need_audio_latent"],
+            "options": {"guider": "CFGGuider", "scheduler": "LTXVScheduler"}
+        },
         "MiniMaxH3": {
             "latent": None,
             "clip_type": comfy.sd.CLIPType.MINIMAX,
@@ -149,6 +162,10 @@ class pipeline:
 
     def get_clip_and_vae(self, unet):
         unet_type = unet.model.__class__.__name__
+
+        # Some detective work...
+        if unet_type == "LTXAV" and unet.model_state_dict().get('diffusion_model.keyframes_abs_pos_embedding', []).shape[1] == 4096:
+            unet_type = "LTXAV2.5"
 
         ret = self.known_model_info.get(unet_type, {})
         ret['unet_type'] = unet_type
@@ -843,8 +860,8 @@ class pipeline:
             samples=video_samples,
             tile_size=512,
             overlap=64,
-            temporal_size=4096,
-            temporal_overlap=8,
+            temporal_size=64,
+            temporal_overlap=16,
             vae=self.model_base_patched.vae,
         )[0]
 

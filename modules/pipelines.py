@@ -109,12 +109,12 @@ def update(gen_data):
                     state["pipeline"] = wan_video_pipeline.pipeline()
 
             elif (
-                baseModel == "LTXV2" or
-                baseModel == "LTXV 2.3" or
-                Path(gen_data['base_model_name']).parts[0] == "LTXV2" or
-                Path(gen_data['base_model_name']).parts[0] == "LTXV 2.3" or
-                baseModel == "MiniMaxH3" or
-                Path(gen_data['base_model_name']).parts[0] == "MiniMax H3"
+                baseModel in [
+                    "LTXV2", "LTXV 2.3", "LTXV 2.5", "MiniMaxH3"
+                ] or
+                Path(gen_data['base_model_name']).parts[0] in [
+                    "LTXV2", "LTXV 2.3", "LTXV 2.5", "MinieMax H3"
+                ]
             ):
                 if (
                     state["pipeline"] is None
