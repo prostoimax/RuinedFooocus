@@ -646,7 +646,7 @@ class pipeline:
                 negative = self.conditions["-"]["cache"]
                 modeltype = self.model_base_patched.unet.model.__class__.__name__
                 match modeltype:
-                    case "LTXAV":
+                    case 'LTXAV' | 'LTXAV-2.5':
                         video_latent = EmptyLTXVLatentVideo().generate(
                             width = gen_data["width"],
                             height = gen_data["height"],
@@ -680,7 +680,7 @@ class pipeline:
         # Conditioning
         modeltype = self.model_base_patched.unet.model.__class__.__name__
         match modeltype:
-            case "LTXAV":
+            case 'LTXAV' | 'LTXAV-2.5':
                 positive, negative = LTXVConditioning().execute(
                     positive = positive,
                     negative = negative,
@@ -822,9 +822,8 @@ class pipeline:
             denoised_output = out
 
         match self.model_info['unet_type']:
-            case 'LTXAV':
+            case 'LTXAV' | 'LTXAV-2.5':
                 if audio_latent is not None:
-                    #video_latent, audio_latent = LTXVSeparateAVLatent().execute(
                     samples = LTXVSeparateAVLatent().execute(
                         av_latent = denoised_output,
                     )
