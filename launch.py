@@ -11,6 +11,7 @@ os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["DO_NOT_TRACK"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["CMAKE_POLICY_VERSION_MINIMUM"] = "3.5"
+os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -48,7 +49,7 @@ git_repos = [
         "name": "ComfyUI",
         "path": "ComfyUI",
         "url": "https://github.com/comfyanonymous/ComfyUI",
-        "hash": "6f7cd7fceaaf60d2669b554936394a7412c6fde5",
+        "hash": "bd34f338ac505ea79e43968753968a464060e609",
         "add_path": "ComfyUI",
     },
 #    {
@@ -118,6 +119,12 @@ def prepare_environment(offline=False):
         # Some platform checks
         torch_platform, os_platform = broken_torch_platforms(torch_platform, os_platform)
 
+        packages = []
+        # Ugly fix to get a more up-to-date torch for NVIDIA gpus
+        if torch_platform == "cu128": torch_platform = "cu132"
+        if torch_platform == "cu124": torch_platform = "cu126"
+        if torch_platform.startswith("cu"): packages = ["torch>=2.12.0", "torchaudio", "torchvision"]
+
         print(f"Torch platform: {os_platform}: {torch_platform}") # Some debug output
 
     if offline:
@@ -127,7 +134,7 @@ def prepare_environment(offline=False):
 
         # Run torchruntime install
         if not os.path.exists("freezetorch"):
-            cmds = torchruntime.installer.get_install_commands(torch_platform, [])
+            cmds = torchruntime.installer.get_install_commands(torch_platform, packages)
             if REINSTALL_ALL or REINSTALL_TORCH:
                 for idx in range(len(cmds)):
                     cmds[idx].insert(0, "--force-reinstall")
