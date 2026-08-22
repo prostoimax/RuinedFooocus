@@ -563,6 +563,7 @@ class pipeline:
         gen_data["width"] = (gen_data["width"] // 32) * 32 # FIXME size clipping should be a option per model type
         gen_data["height"] = (gen_data["height"] // 32) * 32
 
+        print(f"Using {self.model_info['unet_type']} to generate video.")
         if callback is not None:
             worker.add_result(
                 gen_data["task_id"],
