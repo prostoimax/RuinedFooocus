@@ -123,7 +123,7 @@ def prepare_environment(offline=False):
         # Ugly fix to get a more up-to-date torch for NVIDIA gpus
         if torch_platform == "cu128": torch_platform = "cu132"
         if torch_platform == "cu124": torch_platform = "cu126"
-        if torch_platform.startswith("cu"): packages = ["torch>=2.12.0", "torchaudio", "torchvision"]
+        if torch_platform.startswith("cu"): packages = ["torch>=2.14.0", "torchaudio>=2.11.0", "torchvision>=0.29.0"]
 
         print(f"Torch platform: {os_platform}: {torch_platform}") # Some debug output
 
