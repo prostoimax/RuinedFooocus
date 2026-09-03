@@ -84,6 +84,11 @@
         "path": "path_clip",
         "filename": "gemma_3_4b_it_bf16.gguf"
     },
+    "clip/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors": {
+        "url": "https://huggingface.co/dummy9996/LTX-2.5-22b-ungate/resolve/main/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+        "path": "path_clip",
+        "filename": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors"
+    },
     "clip/qwen3vl_4b_bf16.safetensors": {
         "url": "https://huggingface.co/Comfy-Org/Qwen3-VL/resolve/main/text_encoders/qwen3vl_4b_bf16.safetensors",
         "path": "path_clip",
@@ -108,6 +113,16 @@
         "url": "https://huggingface.co/HauhauCS/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf",
         "path": "path_clip",
         "filename": "Qwen3VL-8B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf"
+    },
+    "clip/qwen3vl_32b_minimax_h3_int8_convrot.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "path": "path_clip",
+        "filename": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors"
+    },
+    "clip/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "path": "path_clip",
+        "filename": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
     },
     "clip/jina_clip_v2_bf16.safetensors": {
         "url": "https://huggingface.co/woctordho/comfyui-jina-clip-v2/resolve/main/jina_clip_v2_bf16.safetensors",

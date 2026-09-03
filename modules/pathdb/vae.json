@@ -59,6 +59,16 @@
         "path": "path_vae",
         "filename": "mage_flow_vae_bf16.safetensors"
     },
+    "vae/minimax_h3_audio_vae_fp32.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+	"path": "path_vae",
+        "filename": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "vae/minimax_h3_video_vae_fp16.safetensors": {
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp32.safetensors",
+	"path": "path_vae",
+        "filename": "minimax_h3_video_vae_fp16.safetensors"
+    },
     "vae/hunyuan_video_vae_bf16.safetensors": {
         "url": "https://huggingface.co/calcuis/hunyuan-gguf/resolve/main/hunyuan_video_vae_bf16.safetensors",
         "path": "path_vae",
@@ -143,6 +153,16 @@
         "url": "https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/LTX23_video_vae_bf16.safetensors",
         "path": "path_vae",
         "filename": "LTX23_video_vae_bf16.safetensors"
+    },
+    "vae/ltx-2.5-audio-vae-bf16.safetensors": {
+        "url": "https://huggingface.co/dummy9996/LTX-2.5-22b-ungate/resolve/main/ltx-2.5-audio-vae-bf16.safetensors",
+        "path": "path_vae",
+        "filename": "ltx-2.5-audio-vae-bf16.safetensors"
+    },
+    "vae/ltx-2.5-video-vae-bf16.safetensors": {
+        "url": "https://huggingface.co/dummy9996/LTX-2.5-22b-ungate/resolve/main/ltx-2.5-video-vae-conv-bf16.safetensors",
+        "path": "path_vae",
+        "filename": "ltx-2.5-video-vae-bf16.safetensors"
     },
     "vae/taeltx_2.safetensors": {
         "url": "https://huggingface.co/Kijai/LTXV2_comfy/resolve/main/VAE/taeltx_2.safetensors",

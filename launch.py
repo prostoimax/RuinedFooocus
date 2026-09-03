@@ -11,6 +11,7 @@ os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["DO_NOT_TRACK"] = "1"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["CMAKE_POLICY_VERSION_MINIMUM"] = "3.5"
+os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -48,7 +49,7 @@ git_repos = [
         "name": "ComfyUI",
         "path": "ComfyUI",
         "url": "https://github.com/comfyanonymous/ComfyUI",
-        "hash": "806e092ed42772e4ce7abf44c97c50021cc4bd10",
+        "hash": "725e6ec60621c6f001af04769173e7dbb3c53541",
         "add_path": "ComfyUI",
     },
 #    {
@@ -69,7 +70,7 @@ git_repos = [
         "name": "molbal/ComfyUI-GGUF",
         "path": "molbal_comfyui_gguf",
         "url": "https://github.com/molbal/ComfyUI-GGUF",
-        "hash": "73439d2120c2e465fbdf7eb9e98c17ef592e5da3",
+        "hash": "72c8990f22b86b06a4c9f4cad628d18825160f79",
         "add_path": "",
     },
 ]
@@ -118,6 +119,12 @@ def prepare_environment(offline=False):
         # Some platform checks
         torch_platform, os_platform = broken_torch_platforms(torch_platform, os_platform)
 
+        packages = []
+        # Ugly fix to get a more up-to-date torch for NVIDIA gpus
+        if torch_platform == "cu128": torch_platform = "cu132"
+        if torch_platform == "cu124": torch_platform = "cu126"
+        if torch_platform.startswith("cu"): packages = ["torch>=2.12.0", "torchaudio", "torchvision"]
+
         print(f"Torch platform: {os_platform}: {torch_platform}") # Some debug output
 
     if offline:
@@ -127,7 +134,7 @@ def prepare_environment(offline=False):
 
         # Run torchruntime install
         if not os.path.exists("freezetorch"):
-            cmds = torchruntime.installer.get_install_commands(torch_platform, [])
+            cmds = torchruntime.installer.get_install_commands(torch_platform, packages)
             if REINSTALL_ALL or REINSTALL_TORCH:
                 for idx in range(len(cmds)):
                     cmds[idx].insert(0, "--force-reinstall")
